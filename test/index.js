@@ -458,6 +458,7 @@ describe("Joigoose mongoose validation wrapper", () => {
 describe("Joigoose integration tests", () => {
   let Joigoose;
   let joiUserSchema;
+  let joiDateSchema;
 
   describe("when joigoose is created with defaults", () => {
     before(() => {
@@ -468,7 +469,11 @@ describe("Joigoose integration tests", () => {
           last: S().required(),
         }),
         email: S().email().required(),
-        verified: B(),
+        verified: B()
+      });
+      joiDateSchema = O().keys({
+        dates: A().items(D()),
+        date: D().allow(Joi.in('dates'))
       });
     });
 
@@ -888,6 +893,20 @@ describe("Joigoose integration tests", () => {
       } catch (err) {
         expect(err.message).to.not.equal("Should not be here");
       }
+    });
+
+    it("should deal with in validation properly where dates are referenced", async () => {
+      const mongooseUserSchema = Joigoose.convert(joiDateSchema);
+      const DateModel = Mongoose.model("DateModel1", mongooseUserSchema);
+
+      const newDate = new DateModel({
+        dates: [
+          "2021-02-09 16:00"
+        ],
+        date: "2021-02-09 16:00"
+      });
+
+      await newDate.validate();
     });
   });
 
